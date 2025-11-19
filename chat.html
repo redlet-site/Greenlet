@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat | Greenlet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Titan One', sans-serif;
+      background-color: #d98c00;
+      color: white;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 200px;
+      background-color: #d96f00;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+      box-sizing: border-box;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 200;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar .logo {
+      font-size: 28px;
+      font-weight: 900;
+      padding: 10px 15px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      border-radius: 8px;
+      margin: 5px 10px;
+      transition: background-color 0.2s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background-color: #b65500;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-left: 200px;
+      transition: margin-left 0.3s ease;
+      height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 15px;
+      background-color: #222;
+      font-size: 28px;
+    }
+
+    #profile-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #333;
+    }
+
+    #profile-bar img {
+      width: 40px;
+      height: 40px;
+      border-radius: 0;
+    }
+
+    #current-username {
+      font-size: 16px;
+      color: #ffa500;
+    }
+
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .message img {
+      width: 40px;
+      height: 40px;
+      border-radius: 0;
+    }
+
+    .message .text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message .username {
+      font-weight: bold;
+      font-size: 16px;
+      color: #ffa500;
+    }
+
+    .message .content {
+      font-size: 15px;
+    }
+
+    #chat-form {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background-color: #222;
+      position: relative;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      margin-right: 10px;
+    }
+
+    #emoji-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #ff9900;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+    }
+
+    .emoji-picker {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      right: 60px;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      width: 220px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .emoji-picker .emoji {
+      font-size: 24px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      user-select: none;
+      display: inline-block;
+    }
+
+    .emoji-picker .emoji:hover {
+      background: #444;
+    }
+
+    #send-btn {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #ffa500;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #send-btn:hover {
+      background-color: #ff8c00;
+    }
+
+    #hamburger {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 28px;
+      color: white;
+      background-color: #d96f00;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      z-index: 300;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-220px);
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main {
+        margin-left: 0;
+      }
+      #hamburger {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="hamburger" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+
+  <div class="sidebar" id="sidebar">
+    <div class="logo">FOODIT</div>
+    <a href="stats.html"><i class="fas fa-chart-line"></i> Stats</a>
+    <a href="market.html"><i class="fas fa-store"></i> Market</a>
+    <a href="foods.html"><i class="fas fa-utensils"></i> Foods</a>
+    <a href="chat.html" class="active"><i class="fas fa-comments"></i> Chat</a>
+    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+    <a href="logout.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+
+  <div class="main">
+    <header>Foodit Chat</header>
+    <div id="profile-bar">
+      <img id="current-profile" src="" alt="Profile" />
+      <span id="current-username">Loading...</span>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <form id="chat-form">
+      <input type="text" id="message-input" placeholder="Type your message..." required autocomplete="off" />
+      <button class="emoji-toggle" id="emoji-toggle" type="button">😀</button>
+      <div class="emoji-picker" id="emoji-picker">
+        <span class="emoji">🥳</span><span class="emoji">🥰</span><span class="emoji">😍</span><span class="emoji">😂</span><span class="emoji">🤣</span><span class="emoji">😅</span><span class="emoji">😆</span><span class="emoji">😉</span><span class="emoji">😊</span><span class="emoji">😋</span>
+        <span class="emoji">😎</span><span class="emoji">😘</span><span class="emoji">🤗</span><span class="emoji">🤩</span><span class="emoji">🤔</span><span class="emoji">🤨</span><span class="emoji">😐</span><span class="emoji">😑</span><span class="emoji">🙄</span><span class="emoji">😏</span>
+        <span class="emoji">😣</span><span class="emoji">😥</span><span class="emoji">😮</span><span class="emoji">🤐</span><span class="emoji">😯</span><span class="emoji">😪</span><span class="emoji">😫</span><span class="emoji">🥱</span><span class="emoji">😴</span><span class="emoji">😌</span>
+        <span class="emoji">😛</span><span class="emoji">😜</span><span class="emoji">😝</span><span class="emoji">🤤</span><span class="emoji">😒</span><span class="emoji">😓</span><span class="emoji">😔</span><span class="emoji">😕</span><span class="emoji">🙃</span><span class="emoji">🫠</span>
+        <span class="emoji">🫣</span><span class="emoji">🫢</span><span class="emoji">😲</span><span class="emoji">😷</span><span class="emoji">🤒</span><span class="emoji">🤕</span><span class="emoji">🤢</span><span class="emoji">🤮</span><span class="emoji">🥴</span><span class="emoji">😵</span>
+        <span class="emoji">🥺</span><span class="emoji">😭</span><span class="emoji">😤</span><span class="emoji">😠</span><span class="emoji">😡</span><span class="emoji">🤬</span><span class="emoji">💀</span><span class="emoji">☠️</span><span class="emoji">👻</span><span class="emoji">💩</span>
+        <span class="emoji">🤡</span><span class="emoji">👽</span><span class="emoji">👾</span><span class="emoji">🙈</span><span class="emoji">🙉</span><span class="emoji">🙊</span><span class="emoji">🐵</span><span class="emoji">🐶</span><span class="emoji">🐱</span><span class="emoji">🐭</span>
+        <span class="emoji">🐹</span><span class="emoji">🐰</span><span class="emoji">🦊</span><span class="emoji">🐻</span><span class="emoji">🐼</span><span class="emoji">🐨</span><span class="emoji">🐯</span><span class="emoji">🦁</span><span class="emoji">🐮</span><span class="emoji">🐷</span>
+        <span class="emoji">🐸</span><span class="emoji">🐔</span><span class="emoji">🐧</span><span class="emoji">🐦</span><span class="emoji">🐤</span><span class="emoji">🐣</span><span class="emoji">🐥</span><span class="emoji">🦆</span><span class="emoji">🦅</span><span class="emoji">🦉</span>
+        <span class="emoji">🦇</span><span class="emoji">🐺</span><span class="emoji">🐗</span><span class="emoji">🐴</span><span class="emoji">🦄</span><span class="emoji">🐝</span><span class="emoji">🐛</span><span class="emoji">🦋</span><span class="emoji">🐌</span><span class="emoji">🐞</span>
+        <span class="emoji">🐜</span><span class="emoji">🪲</span><span class="emoji">🐢</span><span class="emoji">🐍</span><span class="emoji">🦎</span><span class="emoji">🐙</span><span class="emoji">🦑</span><span class="emoji">🦀</span><span class="emoji">🐠</span><span class="emoji">🐟</span>
+        <span class="emoji">🐬</span><span class="emoji">🐳</span><span class="emoji">🐋</span><span class="emoji">🦈</span><span class="emoji">⚽</span><span class="emoji">🏀</span><span class="emoji">🏈</span><span class="emoji">⚾</span><span class="emoji">🎾</span><span class="emoji">🏐</span>
+        <span class="emoji">🏉</span><span class="emoji">🥏</span><span class="emoji">🎱</span><span class="emoji">🏓</span><span class="emoji">🏸</span><span class="emoji">🥅</span><span class="emoji">🎯</span><span class="emoji">🎳</span><span class="emoji">🏒</span><span class="emoji">🏑</span>
+        <span class="emoji">🏏</span><span class="emoji">🥍</span><span class="emoji">⛳</span>
+      </div>
+      <button type="submit" id="send-btn"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVJcIFnKgG75EpTmbIvg-zeypVbU03I3g",
+      authDomain: "foodit-chat.firebaseapp.com",
+      databaseURL: "https://foodit-chat-default-rtdb.firebaseio.com",
+      projectId: "foodit-chat",
+      storageBucket: "foodit-chat.appspot.com",
+      messagingSenderId: "798551611055",
+      appId: "1:798551611055:web:c896f152ae356d2b39665a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const currentUser = localStorage.getItem("fooditCurrentUser");
+    const fooditNewStorage = JSON.parse(localStorage.getItem("fooditNewStorage") || "{}");
+    const userData = fooditNewStorage[currentUser];
+    const username = currentUser || "Anonymous";
+    const profilePic = userData?.profilePicture || "https://cdn.blooket.com/blooks/spacePack/astronautIcon.svg";
+
+    document.getElementById("current-profile").src = profilePic;
+    document.getElementById("current-username").textContent = username;
+
+    const chatBox = document.getElementById("chat-box");
+    const chatForm = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message-input");
+    const emojiToggle = document.getElementById("emoji-toggle");
+    const emojiPicker = document.getElementById("emoji-picker");
+
+    const seenMessages = new Set();
+    let lastSentTime = 0;
+
+    function renderMessage(data, key) {
+      if (seenMessages.has(key)) return;
+      seenMessages.add(key);
+
+      const { user, pic, text } = data;
+
+      const safeText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+      const msg = document.createElement("div");
+      msg.className = "message";
+      msg.innerHTML = `
+        <img src="${pic}" alt="Profile" />
+        <div class="text">
+          <div class="username">${user}</div>
+          <div class="content">${safeText}</div>
+        </div>
+      `;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    chatBox.innerHTML = "";
+
+    // Load last 50 messages only to reduce lag
+    db.ref("messages").limitToLast(50).once("value", (snapshot) => {
+      snapshot.forEach((child) => renderMessage(child.val(), child.key));
+    });
+
+    // Listen for new messages live
+    db.ref("messages").on("child_added", (snapshot) => {
+      renderMessage(snapshot.val(), snapshot.key);
+    });
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = messageInput.value.trim();
+      const now = Date.now();
+
+      if (now - lastSentTime < 2000) {
+        alert("You're sending messages too fast!");
+        return;
+      }
+
+      const blacklist = ["<script", "</script", "javascript:", "onerror", "onload", "iframe", "<img", "<a"];
+      const containsBlacklisted = blacklist.some(bad => text.toLowerCase().includes(bad));
+      if (containsBlacklisted || text.length > 300) {
+        alert("Message blocked: contains unsafe content or is too long.");
+        return;
+      }
+
+      if (text) {
+        db.ref("messages").push({
+          user: username,
+          pic: profilePic,
+          text: text.replace(/[<>]/g, "")
+        });
+
+        if (fooditNewStorage[username]) {
+          fooditNewStorage[username].messagesSent = (fooditNewStorage[username].messagesSent || 0) + 1;
+          localStorage.setItem("fooditNewStorage", JSON.stringify(fooditNewStorage));
+        }
+
+        messageInput.value = "";
+        lastSentTime = now;
+      }
+    });
+
+    emojiToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      emojiPicker.style.display = emojiPicker.style.display === "flex" ? "none" : "flex";
+    });
+
+    emojiPicker.addEventListener("click", (e) => {
+      if (e.target.classList.contains("emoji")) {
+        messageInput.value += e.target.textContent;
+        messageInput.focus();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!emojiPicker.contains(e.target) && !emojiToggle.contains(e.target)) {
+        emojiPicker.style.display = "none";
+      }
+    });
+
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.getElementById("sidebar");
+
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.toggle("show");
+    });
+
+    function handleResize() {
+      if (window.innerWidth > 768) {
+        sidebar.classList.remove("show");
+        sidebar.style.transform = "none";
+      } else {
+        sidebar.style.transform = "";
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("load", handleResize);
+  </script>
+</body>
+</html>
