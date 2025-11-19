@@ -1,14 +1,10 @@
-
-<!DOCTYPE html>
-<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Stats | Greenlet</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stats | Foodit</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&amp;display=swap" rel="stylesheet">
   <style>
-    /* Your existing styles unchanged */
     body {
       margin: 0;
       font-family: 'Arial', sans-serif;
@@ -17,9 +13,7 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      overflow-x: hidden;
     }
-
     .hamburger {
       display: none;
       position: fixed;
@@ -32,7 +26,6 @@
       z-index: 9999;
       cursor: pointer;
     }
-
     .sidebar {
       background: #db6a00;
       color: white;
@@ -41,19 +34,11 @@
       padding: 20px 15px;
       box-sizing: border-box;
       position: fixed;
-      top: 0;
-      left: 0;
       font-family: 'Titan One', cursive;
       overflow-y: auto;
-      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
-
-    .sidebar .logo {
-      font-size: 40px;
-      font-weight: bold;
-      margin-bottom: 30px;
-    }
-
     .sidebar a {
       display: flex;
       align-items: center;
@@ -66,25 +51,15 @@
       transition: background 0.3s ease;
       font-family: 'Titan One', cursive;
     }
-
     .sidebar a i {
       margin-right: 10px;
     }
-
-    .sidebar a:hover,
-    .sidebar a:focus {
-      background: rgba(255, 255, 255, 0.2);
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
-
     .sidebar a.active {
       background: #b25500;
     }
-
-    .sidebar a.admin-link {
-      background: #800000;
-      display: none;
-    }
-
     .main {
       margin-left: 220px;
       padding: 40px 24px;
@@ -93,16 +68,13 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      transition: margin 0.3s ease;
     }
-
     .title {
       font-size: 42px;
       font-weight: bold;
       margin-top: 10px;
       font-family: 'Titan One', cursive;
     }
-
     #stats-box {
       background: #fff3e0;
       padding: 30px;
@@ -113,9 +85,7 @@
       text-align: center;
       margin-top: 30px;
       font-family: 'Titan One', cursive;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-
     #user-info {
       font-size: 32px;
       font-weight: bold;
@@ -126,23 +96,19 @@
       gap: 15px;
       margin-bottom: 20px;
     }
-
     #profile-pic {
       width: 140px;
       height: 140px;
-      border-radius: 12px;
+      border-radius: 8px;
       border: 3px solid #db6a00;
-      object-fit: cover;
+      object-fit: contain;
       background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
     #level-display,
     #token-display {
       font-size: 24px;
       margin-top: 10px;
     }
-
     #extra-stats-box {
       margin-top: 30px;
       width: 100%;
@@ -151,7 +117,6 @@
       gap: 20px;
       justify-content: center;
     }
-
     #extra-stats-box a,
     #extra-stats-box .messages-sent {
       flex: 1;
@@ -162,142 +127,116 @@
       color: #db6a00;
       text-decoration: none;
       font-family: 'Titan One', cursive;
-      transition: background 0.3s ease;
-      box-shadow: 0 0 12px rgba(0,0,0,0.08);
     }
-
-    #extra-stats-box a:hover,
-    #extra-stats-box .messages-sent:hover {
-      background: #ffe0b2;
-    }
-
     #extra-stats-box .count {
       font-size: 32px;
       font-weight: 700;
     }
-
     #extra-stats-box .label {
       font-size: 18px;
       margin-top: 5px;
     }
-
-    #claim-box {
-      margin-top: 30px;
+    #daily-wheel-box {
+      margin-top: 50px;
+      text-align: center;
+    }
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: auto;
+    }
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 20px solid #fff;
+      z-index: 2;
+    }
+    canvas#wheel-canvas {
+      border-radius: 50%;
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    #spin-btn {
+      margin-top: 20px;
       background: #fff3e0;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    #claim-box button {
-      background: #db6a00;
-      color: white;
+      color: #db6a00;
       border: none;
       padding: 12px 28px;
-      font-size: 18px;
-      border-radius: 8px;
+      font-size: 20px;
+      font-family: 'Titan One', cursive;
+      border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
-    #claim-box button:hover {
-      background: #b25500;
+    #spin-btn:disabled {
+      background: #e0d4a3;
+      cursor: not-allowed;
+      color: #8c6a00;
     }
-
-    #claim-result {
+    #spin-result {
       margin-top: 15px;
-      font-size: 18px;
+      font-size: 24px;
+      min-height: 28px;
     }
-
-    #contest-box {
-      margin-top: 40px;
-      background: #471f00;
-      border: 3px solid #ff6f00;
-      border-radius: 20px;
-      padding: 25px 30px;
-      max-width: 500px;
-      text-align: center;
-      font-family: 'Titan One', cursive;
-      color: #ffb74d;
-      box-shadow: 0 0 20px #ff6f00;
-    }
-
-    #contest-box h2 {
-      font-size: 30px;
-      margin-bottom: 15px;
-    }
-
-    #contest-box p {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
-
-    #contest-box button {
-      background: #ff6f00;
-      border: none;
-      padding: 12px 28px;
-      font-size: 20px;
-      border-radius: 15px;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      font-family: 'Titan One', cursive;
-    }
-
-    #contest-box button:hover {
-      background: #ff8f00;
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
       .hamburger {
         display: block;
       }
-
       .sidebar {
-        transform: translateX(-100%);
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 9998;
       }
-
-      .sidebar.open {
-        display: block;
-        transform: translateX(0);
-        transition: transform 0.3s ease;
-      }
-
       .main {
         margin-left: 0;
         padding: 20px;
       }
     }
+    /* Work in Progress banner styling */
+    #wip-banner {
+      background: linear-gradient(to right, #ffcc00, #ffa500);
+      color: black;
+      padding: 15px 20px;
+      width: 100%;
+      max-width: 700px;
+      border-radius: 10px;
+      font-family: 'Titan One', cursive;
+      text-align: center;
+      font-size: 22px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      margin: 40px auto;
+    }
   </style>
 </head>
+
 <body>
-  <button class="hamburger" id="hamburger">&#9776;</button>
+  <button class="hamburger" id="hamburger">☰</button>
   <div class="sidebar" id="sidebar">
-    <div class="logo">FOODIT</div>
-    <a href="stats.html" class="active"><i class="fas fa-chart-line"></i> Stats</a>
-    <a href="market.html"><i class="fas fa-store"></i> Market</a>
-    <a href="foods.html"><i class="fas fa-utensils"></i> Foods</a>
+    <!-- Minimal sidebar with only Chat and Logout -->
     <a href="chat.html"><i class="fas fa-comment"></i> Chat</a>
-    <a href="settings.html"><i class="fas fa-gear"></i> Settings</a>
     <a href="#" id="logout-link"><i class="fas fa-sign-out"></i> Logout</a>
-    <a href="admin.html" id="admin-link" class="admin-link"><i class="fas fa-user-shield"></i> Admin Panel</a>  <!-- Admin Panel Link -->
   </div>
 
-  <div class="main">
+  <div class="main" id="main-content" style="display: none;">
     <div class="title">Stats</div>
     <div id="stats-box">
       <div id="user-info">
-        <img id="profile-pic" src="https://fooditgame.glitch.me/images/default.png" alt="Profile Picture" />
+        <img id="profile-pic" src="https://fooditgame.glitch.me/images/default.png" alt="Profile Picture">
         <span id="username-display">Guest</span>
       </div>
       <div id="level-display">Level: 0</div>
       <div id="token-display">Tokens: 0</div>
-      <div id="trade-container">
-        <button id="trade-btn">Start Trade</button>
-      </div>
     </div>
+
     <div id="extra-stats-box">
       <a href="foods.html">
         <div class="count" id="foods-unlocked-count">0</div>
@@ -312,134 +251,91 @@
         <div class="label">Messages Sent</div>
       </div>
     </div>
-    <div id="claim-box">
-      <button id="claim-btn">Claim Tokens</button>
-      <div id="claim-result"></div>
-    </div>
-    <div id="contest-box" style="display:none;">
-      <h2>CoF</h2>
-      <p>Play the difficult word puzzle game on October 20th only!</p>
-      <button id="contest-btn">Join the Contest</button>
+
+    <div id="daily-wheel-box">
+      <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel-canvas" width="300" height="300"></canvas>
+      </div>
+      <button id="spin-btn">🎁 Spin Daily Wheel</button>
+      <div id="spin-result"></div>
     </div>
   </div>
 
   <script>
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.getElementById("sidebar");
+    hamburger.addEventListener("click", () => {
+      sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
+    });
+
     const currentUser = localStorage.getItem("fooditCurrentUser");
     if (!currentUser) {
       alert("No user logged in. Redirecting to login.");
       window.location.href = "login.html";
     }
 
-    // Show admin link for specific users
-    const admins = [
-      "BlooketW@rrior", "GhostRider", "Allonme", "Chίp", "Hotdogm40", "SuperMemes64", "Mystical1", "Caterpillar9", "Blooketwarrior2"
-    ];
+    const isOwner = currentUser === "BlooketWarrior_";
+    const mainContent = document.getElementById("main-content");
+    const sidebarEl = document.getElementById("sidebar");
+    const hamburgerBtn = document.getElementById("hamburger");
 
-    if (admins.includes(currentUser)) {
-      document.getElementById("admin-link").style.display = "flex";  // Show admin panel link
+    if (!isOwner) {
+      // Hide main content only (sidebar stays minimal visible)
+      mainContent.style.display = "none";
+
+      // Show Work in Progress banner only, below sidebar
+      const wipBanner = document.createElement("div");
+      wipBanner.id = "wip-banner";
+      wipBanner.textContent = "🚧 This page is a Work in Progress 🚧";
+      document.body.appendChild(wipBanner);
+    } else {
+      // Show everything normally
+      const getAllUsers = () => JSON.parse(localStorage.getItem("fooditStorage") || "{}");
+      const saveAllUsers = (data) => localStorage.setItem("fooditStorage", JSON.stringify(data));
+      const getCurrentUserData = () => {
+        const allUsers = getAllUsers();
+        if (!allUsers[currentUser]) {
+          allUsers[currentUser] = {
+            tokens: 0,
+            level: 0,
+            profilePicture: "https://fooditgame.glitch.me/images/default.png",
+            blooks: [],
+            packsOpened: 0,
+            messagesSent: 0,
+          };
+          saveAllUsers(allUsers);
+        }
+        return allUsers[currentUser];
+      };
+      const saveCurrentUserData = (data) => {
+        const allUsers = getAllUsers();
+        allUsers[currentUser] = data;
+        saveAllUsers(allUsers);
+      };
+
+      function updateUI() {
+        const userData = getCurrentUserData();
+        document.getElementById("username-display").textContent = currentUser;
+        document.getElementById("profile-pic").src = userData.profilePicture;
+        document.getElementById("level-display").textContent = "Level: " + (userData.level || 0);
+        const tokens = userData.tokens || 0;
+        document.getElementById("token-display").textContent =
+          "Tokens: " + (tokens >= 1e9 ? tokens.toExponential(2) : tokens);
+        document.getElementById("foods-unlocked-count").textContent = (userData.blooks || []).length;
+        document.getElementById("packs-opened-count").textContent = userData.packsOpened || 0;
+        document.getElementById("messages-sent-count").textContent = userData.messagesSent || 0;
+      }
+
+      updateUI();
     }
 
-    document.getElementById("claim-btn").addEventListener("click", function() {
-      const now = new Date();
-      const lastClaimed = localStorage.getItem(currentUser + "_lastClaim");
-
-      // Check if it's before 12 PM today
-      const currentTime = now.getHours();
-      if (currentTime >= 12) {
-        alert("You can no longer claim tokens for today. Please come back tomorrow after 12 PM.");
-        return;
-      }
-
-      // Check if tokens have already been claimed today
-      if (lastClaimed && new Date(lastClaimed).toDateString() === now.toDateString()) {
-        alert("You've already claimed your tokens for today.");
-        return;
-      }
-
-      // Proceed with claiming tokens
-      window.location.href = "claim.html";  // Redirect to claim page
-
-      // Store the current claim time
-      localStorage.setItem(currentUser + "_lastClaim", now.toString());
-    });
-
-    document.getElementById("logout-link").addEventListener("click", function() {
+    document.getElementById("logout-link").addEventListener("click", () => {
       localStorage.removeItem("fooditCurrentUser");
       window.location.href = "login.html";
     });
+  </script><div id="wip-banner">🚧 This page is a Work in Progress 🚧</div>
 
-    // Function to get user data from localStorage
-    function getAllUsers() {
-      return JSON.parse(localStorage.getItem("fooditNewStorage") || "{}");
-    }
 
-    function saveAllUsers(data) {
-      localStorage.setItem("fooditNewStorage", JSON.stringify(data));
-    }
 
-    function getCurrentUserData() {
-      const allUsers = getAllUsers();
-      if (!allUsers[currentUser]) {
-        allUsers[currentUser] = {
-          tokens: 0,
-          level: 0,
-          profilePicture: "https://fooditgame.glitch.me/images/default.png",
-          blooks: [],
-          packsOpened: 0,
-          messagesSent: 0,
-          tradeRequests: {}, // trades sent or received
-        };
-        saveAllUsers(allUsers);
-      }
-      return allUsers[currentUser];
-    }
-
-    function saveCurrentUserData(data) {
-      const allUsers = getAllUsers();
-      allUsers[currentUser] = data;
-      saveAllUsers(allUsers);
-    }
-
-    // Update user interface
-    function updateUI() {
-      const userData = getCurrentUserData();
-      document.getElementById("username-display").textContent = currentUser;
-      document.getElementById("profile-pic").src = userData.profilePicture;
-      document.getElementById("level-display").textContent = "Level: " + (userData.level || 0);
-      const tokens = userData.tokens || 0;
-      document.getElementById("token-display").textContent = "Tokens: " + (tokens >= 1e9 ? tokens.toExponential(2) : tokens);
-
-      // Deduplicate blooks by name or string value
-      const blookArray = Array.isArray(userData.blooks) ? userData.blooks : [];
-      const uniqueBlooks = Array.from(new Set(blookArray.map(b => typeof b === "string" ? b : (b.name || JSON.stringify(b)))));
-      document.getElementById("foods-unlocked-count").textContent = uniqueBlooks.length;
-      document.getElementById("packs-opened-count").textContent = userData.packsOpened || 0;
-      document.getElementById("messages-sent-count").textContent = userData.messagesSent || 0;
-    }
-
-    updateUI();
-
-    // Trade button functionality
-    document.getElementById("trade-btn").addEventListener("click", function() {
-      const targetUser = prompt("Enter the username you want to trade with:");
-      if (targetUser === currentUser) {
-        alert("You cannot trade with yourself.");
-        return;
-      }
-
-      const allUsers = getAllUsers();
-      if (!allUsers[targetUser]) {
-        alert("User not found.");
-        return;
-      }
-
-      // Send trade request
-      allUsers[targetUser].tradeRequests = allUsers[targetUser].tradeRequests || {};
-      allUsers[targetUser].tradeRequests[currentUser] = true;
-      saveAllUsers(allUsers);
-
-      alert(`Trade request sent to ${targetUser}!`);
-    });
-  </script>
 </body>
-</html>
