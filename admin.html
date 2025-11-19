@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel | Greenlet</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #d98d06, #b87807);
+      color: white; overflow: hidden; user-select: none;
+    }
+    .sidebar {
+      background: #db6a00;
+      color: white;
+      width: 220px; height: 100vh;
+      padding: 20px 15px; position: fixed;
+      font-family: 'Titan One', cursive;
+      display: flex; flex-direction: column;
+    }
+    .sidebar .logo {
+      font-size: 40px; font-weight: bold;
+      margin-bottom: 30px; user-select: text;
+    }
+    .sidebar a {
+      display: flex; align-items: center;
+      font-size: 20px; text-decoration: none;
+      color: white; margin: 10px 0; padding: 10px;
+      border-radius: 6px; transition: background 0.3s ease;
+    }
+    .sidebar a i { margin-right: 10px; }
+    .sidebar a:hover { background: rgba(255, 255, 255, 0.15); }
+    .sidebar a.active { background: #b25500; }
+
+    .main {
+      margin-left: 220px; padding: 30px 20px;
+      display: flex; flex-direction: column;
+      gap: 20px; max-width: calc(100vw - 240px);
+      height: 100vh; overflow-y: auto;
+      user-select: text;
+    }
+    h1 {
+      font-family: 'Titan One', cursive;
+      font-size: 42px; margin: 0 0 20px 0;
+    }
+    label {
+      display: block; margin-bottom: 6px;
+      font-size: 18px; font-family: 'Titan One', cursive;
+    }
+    input[type="text"], select {
+      width: 100%; padding: 8px 10px;
+      font-size: 18px; border-radius: 6px;
+      border: none; outline: none;
+      font-family: Arial, sans-serif;
+      margin-bottom: 15px;
+    }
+    .buttons-row {
+      display: flex; flex-wrap: wrap;
+      gap: 12px; justify-content: flex-start;
+    }
+    .buttons-row button, #add-blook-btn {
+      background: #fff3e0; color: #db6a00;
+      font-family: 'Titan One', cursive;
+      font-size: 20px; font-weight: bold;
+      border: none; border-radius: 12px;
+      padding: 12px; cursor: pointer;
+      transition: background 0.3s ease;
+      flex: 1 1 auto; min-width: 220px; max-width: 280px;
+    }
+    .buttons-row button:hover, #add-blook-btn:hover {
+      background: #f7d794;
+    }
+    .alert {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 15px; margin-top: 10px;
+      color: #ffe; font-family: 'Titan One', cursive;
+      font-size: 18px; display: none;
+    }
+    .request-list {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px; border-radius: 10px;
+    }
+    .request {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 10px; margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    .request button {
+      margin-right: 10px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo">FOODIT</div>
+  <a href="stats.html"><i class="fas fa-chart-line"></i> Stats</a>
+  <a href="market.html"><i class="fas fa-store"></i> Market</a>
+  <a href="foods.html"><i class="fas fa-utensils"></i> Foods</a>
+  <a href="chat.html"><i class="fas fa-comments"></i> Chat</a>
+  <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+  <a href="logout.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="main">
+  <h1>Admin Panel - Add Custom Food</h1>
+  <label for="food-name">Custom Food Name</label>
+  <input type="text" id="food-name" placeholder="Enter food name" />
+
+  <label for="food-image">Food Image URL</label>
+  <input type="text" id="food-image" placeholder="https://example.com/image.png" />
+
+  <label for="food-rarity">Rarity</label>
+  <select id="food-rarity">
+    <option value="common">Common</option>
+    <option value="uncommon">Uncommon</option>
+    <option value="rare">Rare</option>
+    <option value="epic">Epic</option>
+    <option value="legendary">Legendary</option>
+    <option value="chroma">Chroma</option>
+    <option value="unique">Unique</option>
+    <option value="mystical">Mystical</option>
+    <option value="heavenly">Heavenly</option>
+  </select>
+
+  <div class="buttons-row">
+    <button id="add-blook-btn">Add Custom Blook</button>
+    <button onclick="clearChat()">Clear Chat</button>
+    <button onclick="muteUser()">Mute User</button>
+    <button onclick="banUser()">Ban User</button>
+  </div>
+
+  <h1>Pending Account Requests</h1>
+  <div id="request-list" class="request-list"></div>
+  <div id="alert-msg" class="alert"></div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVJcIFnKgG75EpTmbIvg-zeypVbU03I3g",
+    authDomain: "foodit-chat.firebaseapp.com",
+    databaseURL: "https://foodit-chat-default-rtdb.firebaseio.com",
+    projectId: "foodit-chat",
+    storageBucket: "foodit-chat.appspot.com",
+    messagingSenderId: "798551611055",
+    appId: "1:798551611055:web:c896f152ae356d2b39665a"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function getAllUsers() {
+    const raw = localStorage.getItem("fooditNewStorage");
+    return raw ? JSON.parse(raw) : {};
+  }
+
+  function getCurrentUserName() {
+    return localStorage.getItem("fooditCurrentUser");
+  }
+
+  function getCurrentUser() {
+    const users = getAllUsers();
+    const user = getCurrentUserName();
+    return user && users[user] ? users[user] : null;
+  }
+
+  function saveCurrentUser(userData) {
+    const users = getAllUsers();
+    const user = getCurrentUserName();
+    if (!user) return;
+    users[user] = userData;
+    localStorage.setItem("fooditNewStorage", JSON.stringify(users));
+  }
+
+  const allowedAdmins = ["BlooketW@rrior", "ABeck99", "Allonme", "Chίp", "Hotdogm40", "SuperMemes64", "Mystical1", "SargeFlowerPot", "Caterpillar9", "Blooketwarrior2"];
+  const currentUser = getCurrentUserName();
+  if (!allowedAdmins.includes(currentUser)) {
+    alert("Access denied. Redirecting to Stats page.");
+    window.location.href = "stats.html";
+  }
+
+  document.getElementById("add-blook-btn").onclick = () => {
+    const name = document.getElementById("food-name").value.trim();
+    const img = document.getElementById("food-image").value.trim();
+    const rarity = document.getElementById("food-rarity").value.trim();
+    const user = getCurrentUser();
+
+    if (!name) return showAlert("Please enter a food name.");
+    if (!img || !isValidURL(img)) return showAlert("Please enter a valid image URL.");
+    if (!rarity) return showAlert("Please select a rarity.");
+    if (!user) return showAlert("User data not found.");
+
+    const newFood = { name, img, rarity };
+    if (!user.blooks) user.blooks = [];
+    user.blooks.push(newFood);
+    saveCurrentUser(user);
+
+    document.getElementById("food-name").value = "";
+    document.getElementById("food-image").value = "";
+    document.getElementById("food-rarity").value = "common";
+    showAlert(`Custom food "${name}" added successfully!`, true);
+  };
+
+  function clearChat() {
+    db.ref("messages").remove()
+      .then(() => showAlert("Chat cleared successfully.", true))
+      .catch(() => showAlert("Failed to clear chat."));
+  }
+
+  function muteUser() {
+    const users = getAllUsers();
+    const userToMute = prompt("Enter the username to mute:");
+    const durationMinutes = parseInt(prompt("Enter mute duration in minutes:"), 10);
+    if (!userToMute || isNaN(durationMinutes) || durationMinutes <= 0) return showAlert("Invalid mute input.");
+    if (!users[userToMute]) users[userToMute] = {};
+    users[userToMute].mutedUntil = Date.now() + durationMinutes * 60 * 1000;
+    localStorage.setItem("fooditNewStorage", JSON.stringify(users));
+    showAlert(`${userToMute} muted for ${durationMinutes} minute(s).`, true);
+  }
+
+  function banUser() {
+    const users = getAllUsers();
+    const userToBan = prompt("Enter the username to ban:");
+    if (!userToBan) return showAlert("No username entered.");
+    if (!users[userToBan]) users[userToBan] = {};
+    users[userToBan].banned = true;
+    localStorage.setItem("fooditNewStorage", JSON.stringify(users));
+    showAlert(`${userToBan} has been banned.`, true);
+  }
+
+  function showAlert(message, success = false) {
+    const alertMsg = document.getElementById("alert-msg");
+    alertMsg.textContent = message;
+    alertMsg.style.display = "block";
+    alertMsg.style.backgroundColor = success ? "rgba(40, 180, 40, 0.6)" : "rgba(255, 0, 0, 0.7)";
+    setTimeout(() => alertMsg.style.display = "none", 4000);
+  }
+
+  function isValidURL(str) {
+    try { new URL(str); return true; } catch { return false; }
+  }
+
+  // Load pending requests
+  firebase.database().ref("forms").on("value", (snapshot) => {
+    const data = snapshot.val() || {};
+    const list = document.getElementById("request-list");
+    list.innerHTML = "";
+    Object.entries(data).forEach(([username, form]) => {
+      if (form.status !== "pending") return;
+      const div = document.createElement("div");
+      div.className = "request";
+      div.innerHTML = `
+        <b>${username}</b><br>
+        Age: ${form.age}<br>
+        Discord: ${form.discord}<br>
+        Reason: ${form.whyPlay}<br>
+        <button onclick="approveUser('${username}', '${form.password}')">Approve</button>
+        <button onclick="declineUser('${username}')">Decline</button>
+      `;
+      list.appendChild(div);
+    });
+  });
+
+  function approveUser(username, password) {
+    const users = getAllUsers();
+    if (!users[username]) {
+      users[username] = {
+        password,
+        blooks: [],
+        profilePicture: "https://fooditgame.glitch.me/images/default.png",
+        tokens: 0,
+        packsOpened: 0,
+        messagesSent: 0,
+        lastSpin: null
+      };
+      localStorage.setItem("fooditNewStorage", JSON.stringify(users));
+    }
+    firebase.database().ref(`forms/${username}/status`).set("approved");
+    showAlert(`${username} approved!`, true);
+  }
+
+  function declineUser(username) {
+    firebase.database().ref(`forms/${username}/status`).set("declined");
+    showAlert(`${username} declined.`);
+  }
+</script>
+</body>
+</html>
