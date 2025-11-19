@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Signup | Foodit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Titan One', cursive;
+      background-color: #d65c00;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .signup-box {
+      background-color: #d65c00;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 360px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    input, textarea {
+      padding: 12px;
+      font-size: 16px;
+      font-family: 'Titan One', cursive;
+      border: none;
+      border-radius: 10px;
+      background-color: #e6f0ff;
+      color: black;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 18px;
+      background: #ffd399;
+      color: #a34700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .alert {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-box">
+    <h1>Foodit Signup</h1>
+    <form id="signup-form">
+      <div id="step-1" class="step active">
+        <input type="text" id="username" placeholder="Create Username" required />
+        <input type="password" id="password" placeholder="Create Password" required />
+        <button type="button" onclick="nextStep()">Next</button>
+      </div>
+      <div id="step-2" class="step">
+        <input type="text" id="age" placeholder="Age" required />
+        <input type="text" id="discord" placeholder="Discord Username" required />
+        <textarea id="whyPlay" placeholder="Why do you want to play Foodit?" required></textarea>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+    <div class="alert" id="alert-msg"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVJcIFnKgG75EpTmbIvg-zeypVbU03I3g",
+      authDomain: "foodit-chat.firebaseapp.com",
+      databaseURL: "https://foodit-chat-default-rtdb.firebaseio.com",
+      projectId: "foodit-chat",
+      storageBucket: "foodit-chat.appspot.com",
+      messagingSenderId: "798551611055",
+      appId: "1:798551611055:web:c896f152ae356d2b39665a"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function nextStep() {
+      document.getElementById("step-1").classList.remove("active");
+      document.getElementById("step-2").classList.add("active");
+    }
+
+    const form = document.getElementById("signup-form");
+    const alertBox = document.getElementById("alert-msg");
+
+    // Password hashing (SHA-256)
+    async function hashPassword(password) {
+      const msgBuffer = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const age = document.getElementById("age").value.trim();
+      const discord = document.getElementById("discord").value.trim();
+      const whyPlay = document.getElementById("whyPlay").value.trim();
+
+      if (!username || !password || !age || !discord || !whyPlay) {
+        return showAlert("All fields are required.");
+      }
+
+      const hashedPassword = await hashPassword(password);
+
+      const formRef = db.ref("forms/" + username);
+      const snapshot = await formRef.get();
+      if (snapshot.exists()) return showAlert("Username already submitted.");
+
+      await formRef.set({
+        password: hashedPassword, // hashed password only
+        age,
+        discord,
+        whyPlay,
+        status: "pending"
+      });
+
+      showAlert("Signup submitted! Waiting for approval...", true);
+      listenForApproval(username, hashedPassword);
+    };
+
+    function showAlert(msg, success = false) {
+      alertBox.textContent = msg;
+      alertBox.style.background = success ? "rgba(40,180,40,0.5)" : "rgba(255,0,0,0.5)";
+    }
+
+    function listenForApproval(username, hashedPassword) {
+      const statusRef = db.ref("forms/" + username + "/status");
+      statusRef.on("value", (snapshot) => {
+        const status = snapshot.val();
+        if (status === "approved" || status === "accepted") {
+          showAlert("✅ Approved! Redirecting...", true);
+          setTimeout(() => {
+            localStorage.setItem("fooditCurrentUser", username);
+            const usersData = JSON.parse(localStorage.getItem("fooditStorage") || "{}");
+            if (!usersData[username]) {
+              usersData[username] = {
+                password: hashedPassword, // store hash in localStorage too
+                blooks: [],
+                profilePicture: "https://fooditgame.glitch.me/images/default.png",
+                tokens: 0,
+                packsOpened: 0,
+                messagesSent: 0,
+                lastSpin: null
+              };
+              localStorage.setItem("fooditStorage", JSON.stringify(usersData));
+            }
+            window.location.href = "stats.html";
+          }, 2500);
+        } else if (status === "declined") {
+          showAlert("❌ Signup declined.");
+        }
+      });
+    }
+  </script>
+</body>
+</html>
