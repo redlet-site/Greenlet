@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market | Foodit</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom right, #d98d06, #b87807);
+      color: white;
+    }
+
+    .sidebar {
+      background: #db6a00;
+      color: white;
+      width: 220px;
+      min-height: 100vh;
+      padding: 20px 15px;
+      box-sizing: border-box;
+      position: fixed;
+      font-family: 'Titan One', cursive;
+      top: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .sidebar .logo {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      word-break: break-word;
+    }
+
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      text-decoration: none;
+      color: white;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+    }
+
+    .sidebar a i {
+      margin-right: 10px;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar a.active {
+      background: #b25500;
+    }
+
+    .main {
+      margin-left: 220px;
+      padding: 30px 20px;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-family: 'Titan One', cursive;
+    }
+
+    .token-display {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 28px;
+      color: white;
+      cursor: pointer;
+      z-index: 1100;
+      user-select: none;
+    }
+
+    @media (max-width: 768px) {
+      .hamburger {
+        display: block;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        width: 220px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+      }
+
+      .sidebar .logo {
+        font-size: 30px;
+        margin-bottom: 20px;
+      }
+    }
+
+    .pack-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .pack {
+      width: 200px;
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      color: black;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Titan One', cursive;
+      transition: transform 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pack:hover {
+      transform: scale(1.05);
+    }
+
+    .pack img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      margin-bottom: 10px;
+      transition: transform 0.4s ease;
+    }
+
+    .pack.opening img {
+      animation: packOpenAnim 0.5s ease forwards;
+    }
+
+    @keyframes packOpenAnim {
+      0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.2) rotate(10deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    .pack-name {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .pack-price {
+      background: #db6a00;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    #popup-message {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #db6a00;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 15px;
+      font-family: 'Titan One', cursive;
+      font-size: 18px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      max-width: 90%;
+      z-index: 2000;
+    }
+
+    #popup-message.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="hamburger" id="hamburger"><i class="fas fa-bars"></i></div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="logo">FOODIT</div>
+    <a href="stats.html"><i class="fas fa-chart-line"></i> Stats</a>
+    <a href="market.html" class="active"><i class="fas fa-store"></i> Market</a>
+    <a href="foods.html"><i class="fas fa-utensils"></i> Foods</a>
+    <a href="chat.html"><i class="fas fa-comment"></i> Chat</a>
+    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+    
+    <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+
+  <div class="main">
+    <div class="title">Market</div>
+    <div class="token-display">🪙 Tokens: <span id="token-count">0</span></div>
+    <div class="pack-container">
+      <div class="pack" id="school-pack" onclick="buyPack('school', this)">
+        <img src="https://i.postimg.cc/0yxwPX8m/Milk-1.png" alt="School Pack" />
+        <div class="pack-name">School Pack</div>
+        <div class="pack-price">💰 50 Tokens</div>
+      </div>
+      <div class="pack" id="donut-pack" onclick="buyPack('donut', this)">
+        <img src="https://i.postimg.cc/N0znbQ4x/donut-Pack.png" alt="Donut Pack" />
+        <div class="pack-name">Donut Pack</div>
+        <div class="pack-price">💰 30 Tokens</div>
+      </div>
+       <div class="pack" id="og-pack" onclick="buyPack('og', this)">
+        <img src="https://i.postimg.cc/76kp7h17/download-6.png" alt="OG Pack" />
+        <div class="pack-name">OG Pack</div>
+        <div class="pack-price">💰 30 Tokens</div>
+      </div>
+      <div class="pack" id="space-pack" onclick="buyPack('space', this)">
+        <img src="https://i.postimg.cc/dQzD6Hpd/spacepack.webp" alt="Space Pack" />
+        <div class="pack-name">Space Pack</div>
+        <div class="pack-price">💰 30 Tokens</div>
+      </div>
+      <div class="pack" id="milk-pack" onclick="buyPack('milk', this)">
+        <img src="https://cdn.glitch.global/9aba0bca-3e6a-4f92-ba3a-681225c4dc31/thumbnails%2Fmilkpack.webp" alt="Milk Pack" />
+        <div class="pack-name">Milk Pack</div>
+        <div class="pack-price">💰 30 Tokens</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="popup-message"></div>
+
+  <script>
+    const tokenDisplay = document.getElementById("token-count");
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.getElementById('sidebar');
+    const popup = document.getElementById('popup-message');
+
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+        sidebar.classList.remove('active');
+      }
+    });
+
+    function getCurrentUser() {
+      return localStorage.getItem('fooditCurrentUser');
+    }
+
+    function getAllUsers() {
+      const raw = localStorage.getItem('fooditNewStorage');
+      return raw ? JSON.parse(raw) : {};
+    }
+
+    function saveAllUsers(users) {
+      localStorage.setItem('fooditNewStorage', JSON.stringify(users));
+    }
+
+    function getCurrentUserData() {
+      const users = getAllUsers();
+      const currentUser = getCurrentUser();
+      if (!currentUser || !users[currentUser]) return null;
+      return users[currentUser];
+    }
+
+    function saveCurrentUserData(data) {
+      const users = getAllUsers();
+      const currentUser = getCurrentUser();
+      if (!currentUser) return;
+      users[currentUser] = data;
+      saveAllUsers(users);
+    }
+
+    function getTokens() {
+      const userData = getCurrentUserData();
+      return userData ? (parseFloat(userData.tokens) || 0) : 0;
+    }
+
+    function setTokens(amount) {
+      const userData = getCurrentUserData();
+      if (!userData) return;
+      userData.tokens = amount;
+      saveCurrentUserData(userData);
+      tokenDisplay.textContent = amount.toLocaleString('en-US');
+    }
+
+    function getPacksOpened() {
+      const userData = getCurrentUserData();
+      return userData ? (parseInt(userData.packsOpened) || 0) : 0;
+    }
+
+    function setPacksOpened(count) {
+      const userData = getCurrentUserData();
+      if (!userData) return;
+      userData.packsOpened = count;
+      saveCurrentUserData(userData);
+    }
+
+    function getBlooks() {
+      const userData = getCurrentUserData();
+      return userData ? (userData.blooks || []) : [];
+    }
+
+    function addBlook(blook) {
+      const userData = getCurrentUserData();
+      if (!userData) return;
+      userData.blooks = userData.blooks || [];
+      userData.blooks.push(blook);
+      saveCurrentUserData(userData);
+    }
+
+    const milkPack = [
+      { name: "Banana Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_bananaMilk.png?1750440374803", rarity: "uncommon", chance: 30 },
+      { name: "Strawberry Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_strawberryMilk.png?1750440380485", rarity: "uncommon", chance: 25 },
+      { name: "Blueberry Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_blueberryMilk.png?1750440387664", rarity: "rare", chance: 15 },
+      { name: "Grape Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_grapeMilk.png?1750440406384", rarity: "rare", chance: 10 },
+      { name: "Chocolate Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_chocolateMilk.png?1750440422676", rarity: "epic", chance: 0.8 },
+      { name: "Bubble Gum Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fthumbnails_bubblegumMilk.png?1750440430356", rarity: "chroma", chance: 0.05 },
+      { name: "Warriet Milk", img: "https://i.postimg.cc/wB35wMNV/Warriet-Milk.png", rarity: "legendary", chance: 1 },
+      { name: "Cat Milk", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2FcatMilk.png?1750455696008", rarity: "unique", chance: 0.03 },
+      { name: "Dog Milk", img: "https://i.postimg.cc/MKxMpJnF/dogMilk.png", rarity: "unique", chance: 0.03 },
+      { name: "Cotton Candy Milk", img: "https://i.postimg.cc/mhWPz0Px/cottoncandy-Milk.png", rarity: "chroma", chance: 0.05 },
+    ];
+    const tokenPack = [
+      { name: "Foodit Token", img: "https://i.postimg.cc/bNStmSq6/Foodit-Token2.webp", rarity: "unique", chance: 100 },
+    ];
+
+    const spacePack = [
+       { name: "Moon", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fmoon.png?1750451519920", rarity: "uncommon", chance: 30 },
+      { name: "Asteroid", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fasteroid.png?1750526345816", rarity: "uncommon", chance: 25 },
+      { name: "Saturn", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fsaturn%20(1).png?1750526475085", rarity: "rare", chance: 20 },
+      { name: "Black Hole", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2FblackHole.png?1750526520003", rarity: "uncommon", chance: 10 },
+      { name: "Mars", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fmars.png?1750526570761", rarity: "rare", chance: 10 },
+      { name: "Sun", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fsun.png?1750526580706", rarity: "epic", chance: 4 },
+      { name: "Astronaut", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fastronaut.png?1750451907761", rarity: "legendary", chance: 3 },
+      { name: "Meteoroids", img: "https://cdn.glitch.global/36ec2602-304b-444b-8f2f-08c65c92bbc0/thumbnails%2Fmeteoroids.png?1750526681842", rarity: "chroma", chance: 0.05 },
+      { name: "Alien Egg", img: "https://i.postimg.cc/dtCMLbX3/alienegg.png", rarity: "chroma", chance: 0.05 },
+      { name: "Rainbow Saturn", img: "https://i.postimg.cc/RVW0BYps/rainbow-Saturn.gif", rarity: "mystical", chance: 0.005 },
+      { name: "Constellation", img: "https://i.postimg.cc/Cxfdj2jB/constellation.gif", rarity: "heavenly", chance: 0.0002 },
+    ];
+
+    const schoolPack = [ 
+      { name: "Pencil", img: "https://i.postimg.cc/9rcNCPM2/pencil.png", rarity: "uncommon", chance: 30 },
+      { name: "Pencil Pouch", img: "https://i.postimg.cc/wtnGpSt4/pencil-Pouch.png", rarity: "uncommon", chance: 25 },
+      { name: "Notebook Paper", img: "https://i.postimg.cc/y3yQ0xL2/notebook-Paper.png", rarity: "rare", chance: 20 },
+      { name: "Note Pad", img: "https://i.postimg.cc/rdDP78pt/notePad.png", rarity: "rare", chance: 10 },
+      { name: "Markers", img: "https://i.postimg.cc/4n6FD2Xw/markers.png", rarity: "epic", chance: 5 },
+      { name: "Crayons", img: "https://i.postimg.cc/Vd4Z6SrC/crayons.png", rarity: "epic", chance: 4 },
+      { name: "Teachers Cup", img: "https://i.postimg.cc/8JWnPtMp/teachers-Cup.png", rarity: "legendary", chance: 3 },
+      { name: "Chalkboard", img: "https://i.postimg.cc/H8gvJX9Q/chalkboard.png", rarity: "legendary", chance: 2 },
+      { name: "Teachers Desk", img: "https://i.postimg.cc/tsScr19j/teachers-Desk.png", rarity: "chroma", chance: 0.05 },
+    ];
+
+    const donutPack = [
+       { name: "Glaze Donut", img: "https://i.postimg.cc/W4GVHFd7/Glaze-Donut.webp", rarity: "uncommon", chance: 30 },
+      { name: "Strawberry Glazed Donut", img: "https://i.postimg.cc/B6Sr7h9q/Strawberry-Glazed-Donut.webp", rarity: "uncommon", chance: 25 },
+      { name: "Chocolate Glazed Donut", img: "https://i.postimg.cc/tgXv9Yrk/Chocolate-Glazed-Donut.webp", rarity: "uncommon", chance: 20 },
+      { name: "Blueberry Donut", img: "https://i.postimg.cc/HxN603Tv/Blueberry-Donut-1.webp", rarity: "rare", chance: 10 },
+      { name: "Blackberry Donut", img: "https://i.postimg.cc/mZvsBy7S/Blackberry-Donut.webp", rarity: "rare", chance: 10 },
+      { name: "Boston Creme", img: "https://i.postimg.cc/4x4FgY25/Boston-Creme.webp", rarity: "epic", chance: 5 },
+      { name: "Donut Hole", img: "https://i.postimg.cc/6qYnLpVW/Donut-Holes.webp", rarity: "legendary", chance: 1 },
+      { name: "Space Donut", img: "https://i.postimg.cc/CL9zy8Ky/Space-Donut.webp", rarity: "chroma", chance: 0.03},
+      { name: "Cinnamon Rolls", img: "https://i.postimg.cc/yN6W7wkM/cinnamon-Rolls.png", rarity: "chroma", chance: 0.03 },
+      { name: "Iced Blue Donut", img: "https://i.postimg.cc/GpCtt1Yq/Iced-Blue-Donut.webp", rarity: "chroma", chance: 0.03 },
+      { name: "Mystery Donut", img: "https://i.postimg.cc/25RG532M/mystery-Donut-swing-smooth.gif", rarity: "mystical", chance: 0.004 },
+    ];
+    
+    const ogPack = [
+    { name: "Bagel Penguin", img: "https://i.postimg.cc/Fk7KBcZh/bagel-Penguin.png", rarity: "uncommon", chance: 30 },
+          { name: "Chip", img: "https://i.postimg.cc/8FNzVxHK/chip.png", rarity: "uncommon", chance: 30 },
+          { name: "History Penguin", img: "https://i.postimg.cc/xq48bxf8/History-Penguin.png", rarity: "uncommon", chance: 30 },
+          { name: "Noodles", img: "https://i.postimg.cc/18p32ypV/noodles.png", rarity: "rare", chance: 20 },
+          { name: "Octayden", img: "https://i.postimg.cc/7GB69XSB/octayden.png", rarity: "rare", chance: 20 },
+          { name: "Ayden", img: "https://i.postimg.cc/mt1D3Ykw/ayden.png", rarity: "rare", chance: 20 },
+          { name: "Fasty Jay", img: "https://i.postimg.cc/CxdBTLqj/Untitled-design-13.png", rarity: "epic", chance: 10 },
+          { name: "Mystical", img: "https://i.postimg.cc/zymfxyR1/mystical.png", rarity: "epic", chance: 10 },
+          { name: "Panda Flame", img: "https://i.postimg.cc/8cKptMwx/Screen-Shot-2025-08-01-at-6-49-29-AM.webp", rarity: "legendary", chance: 1 },
+          { name: "Spork", img: "https://i.postimg.cc/cKB6gdCG/spork.png", rarity: "legendary", chance: 1 },
+          { name: "SpeedGoodAlr", img: "https://i.postimg.cc/t7T7JQH8/speed-Good-Alr.png", rarity: "chroma", chance: 0.05 },
+          { name: "Caterpillar9", img: "https://i.postimg.cc/KkcjtC3k/caterpillar9.png", rarity: "chroma", chance: 0.05},
+          { name: "Allonme", img: "https://i.postimg.cc/qRP5Yhfb/allonme.png", rarity: "chroma", chance: 0.05 },
+          { name: "Glitch", img: "https://i.postimg.cc/YqsCRP7q/glitch.webp", rarity: "unique", chance: 0.03 },
+          { name: "SuperMemes64", img: "https://i.postimg.cc/hjPKnpmG/Super-Memes-64.webp", rarity: "unique", chance: 0.03 },
+          { name: "SOUNDGOD", img: "https://i.postimg.cc/R3dVCGpM/SOUNDGOD.gif", rarity: "mystical", chance: 0.005 },
+          { name: "Blooket Warrior", img: "https://i.postimg.cc/htNhD5Z3/Blooket-Warrior.gif", rarity: "heavenly", chance: 0.0001},
+        ];
+
+     const spookyPack = [ 
+      { name: "Devil Milk", img: "https://i.postimg.cc/tYCRHrfD/devil-Milk.png", rarity: "uncommon", chance: 30 },
+      { name: "Mummy Monster", img: "https://i.postimg.cc/nM1Vg8dC/Mummy-Monster-3.png", rarity: "uncommon", chance: 25 },
+      { name: "Caramel Ghost", img: "https://i.postimg.cc/SxwSvKMx/Caramel-Ghost.png", rarity: "rare", chance: 20 },
+      { name: "Pumpkin Cat", img: "https://i.postimg.cc/F1vsTFVM/Pumpkin-Cat.png", rarity: "rare", chance: 10 },
+      { name: "Pumpkin Pie", img: "https://i.postimg.cc/kRsHcvvg/Pumpkin-Pie-1.png", rarity: "epic", chance: 5 },
+      { name: "Devil Narwhal", img: "https://i.postimg.cc/BjjqjjJK/Devil-Narwhal-1.png", rarity: "epic", chance: 4 },
+      { name: "Witch Pot", img: "https://i.postimg.cc/GhxbFrGw/witchPot.png", rarity: "epic", chance: 4 },
+      { name: "Bot Ghost", img: "https://i.postimg.cc/QH48NQZD/Bot-Ghost-2.png", rarity: "legendary", chance: 3 },
+      { name: "Vampire Baby Shark", img: "https://i.postimg.cc/CnStkQD2/vampirebaby-Shark.png", rarity: "chroma", chance: 0.07 },
+      { name: "Black Cat", img: "https://i.postimg.cc/kgP3RMB0/blackCat.png", rarity: "chroma", chance: 0.07 },
+      { name: "Zombie Astronaut", img: "https://i.postimg.cc/dhgJrJ0S/7de3d7e2-ee47-428f-8f80-0bd898d804a4.png", rarity: "chroma", chance: 0.07 },
+      { name: "Haunted Jack o Lantern", img: "https://i.postimg.cc/Fdj8f4fc/hauntedjacko-Lantern.png", rarity: "unique", chance: 0.04 },
+      { name: "Spooky Bot Ghost", img: "https://i.postimg.cc/ft41TLbD/spookybot-Ghost.gif", rarity: "mystical", chance: 0.009 },
+    ];
+
+    const blizzardPack = [ 
+      { name: "Cool Santa", img: "https://i.postimg.cc/hhHxx4Y3/cool-Santa.png", rarity: "uncommon", chance: 30 },
+      { name: "Holiday Cat", img: "https://i.postimg.cc/rzzCxPwz/Holiday-Cat-1.png", rarity: "uncommon", chance: 25 },
+      { name: "Holiday Frog", img: "https://i.postimg.cc/62brFdY9/Holiday-Frog-1.png", rarity: "rare", chance: 20 },
+      { name: "Santa Gummy", img: "https://i.postimg.cc/V0SqwdVX/Santa-Gummy-1.png", rarity: "rare", chance: 10 },
+      { name: "Golden Hot Chocolate", img: "https://i.postimg.cc/Rq81RLWd/Golden-Hot-Chocolate-1.png", rarity: "rare", chance: 5 },
+      { name: "Blooket Christmas Snow Globe", img: "https://i.postimg.cc/FfZgVtSk/snowglobe-svg-1.png", rarity: "epic", chance: 4 },
+      { name: "Evil Snowman", img: "https://i.postimg.cc/cgz3FdLC/Evil-Snowman-1.png", rarity: "epic", chance: 4 },
+      { name: "Santa Bot", img: "https://i.postimg.cc/yg8hffhQ/santaBot.png", rarity: "legendary", chance: 3 },
+      { name: "Frozen Crab", img: "https://i.postimg.cc/1nX608Pb/frozen-Crab.png", rarity: "chroma", chance: 0.07 },
+      { name: "Frozen Deer", img: "https://i.postimg.cc/Nypmr6h1/frozen-Deer.png", rarity: "chroma", chance: 0.07 },
+      { name: "Frozen Monster", img: "https://i.postimg.cc/v1Q5BPKY/frozen-Monster.png", rarity: "chroma", chance: 0.07 },
+      { name: "Frozen Owl", img: "https://i.postimg.cc/K1hPXcrg/frozen-Owl.png", rarity: "chroma", chance: 0.07 },
+      { name: "Frozen Shark", img: "https://i.postimg.cc/D8XrY4sT/frozen-Shark.png", rarity: "chroma", chance: 0.07 },
+      { name: "Golden Wreath", img: "https://i.postimg.cc/tsdh902v/golden-Wreath.png", rarity: "chroma", chance: 0.07 },
+      { name: "Desert Snow Globe", img: "https://i.postimg.cc/5QFCGDX3/desert-Snowglobe.png", rarity: "chroma", chance: 0.07 },
+      { name: "Turtle Clause", img: "https://i.postimg.cc/ft41TLbD/spookybot-Ghost.gif", rarity: "mystical", chance: 0.009 },
+    ];
+
+      const thanksgivingPack = [ 
+      { name: "Leaf Pile", img: "https://i.postimg.cc/hzJhG03f/autumncat2.webp", rarity: "uncommon", chance: 30 },
+      { name: "Cornucopia", img: "https://i.postimg.cc/svPx1xK9/costume2-1.webp", rarity: "uncommon", chance: 30 },
+      { name: "Pumpkins", img: "https://i.postimg.cc/67pykKrV/leafpile.webp", rarity: "rare", chance: 10 },
+      { name: "Squash", img: "https://i.postimg.cc/mcptRnjv/pumpkin.webp", rarity: "rare", chance: 10 },
+      { name: "Pumpkin Pie", img: "https://i.postimg.cc/bZTZVrtN/Pumpkin-Pie.webp", rarity: "epic", chance: 5 },
+      { name: "Pilgram Hat", img: "https://i.postimg.cc/crG6sw7L/Pilgrim-Hat-1.webp", rarity: "epic", chance: 5 },
+      { name: "Turkey Leg", img: "https://i.postimg.cc/YjWhKbWP/breakfastcombo.webp", rarity: "legendary", chance: 1 },
+      { name: "Golden Pumpkin Pie", img: "https://i.postimg.cc/XBdJfYWW/Pumpkin-Pie-1.webp", rarity: "chroma", chance: 0.07 },
+    ];
+    // Negative pack: shown only for user Blooket_Warrior, costs -50000 tokens (adds tokens)
+    const negativePack = {
+      cost: -50000,
+      name: "-50,000 Tokens Pack",
+      img: "https://i.postimg.cc/4N7vXTjD/pencilpouch.png",
+    };
+
+    // Show negative pack only for BlooketW@rrior user
+    function maybeShowNegativePack() {
+      const user = getCurrentUser();
+      if (user === "BlooketW@rrior") {
+        // Create negative pack DOM element dynamically and add to pack-container
+        if (!document.getElementById('negative-pack')) {
+          const packContainer = document.querySelector('.pack-container');
+          const negPack = document.createElement('div');
+          negPack.className = 'pack';
+          negPack.id = 'negative-pack';
+          negPack.style.background = '#b22222';
+          negPack.style.color = 'white';
+          negPack.style.border = '2px solid #800000';
+          negPack.style.cursor = 'pointer';
+          negPack.innerHTML = `
+            <img src="${negativePack.img}" alt="${negativePack.name}" style="filter: brightness(0.8);" />
+            <div class="pack-name">${negativePack.name}</div>
+            <div class="pack-price" style="background: #800000;">💰 -50,000 Tokens</div>
+          `;
+          negPack.onclick = () => buyPack('negative', negPack);
+          packContainer.appendChild(negPack);
+        }
+      }
+    }
+
+    function showPopup(message) {
+      popup.textContent = message;
+      popup.classList.add('show');
+      setTimeout(() => {
+        popup.classList.remove('show');
+      }, 3000);
+    }
+
+    // Random selection weighted by chance
+    function weightedRandomPick(arr) {
+      const sum = arr.reduce((acc, item) => acc + item.chance, 0);
+      let rand = Math.random() * sum;
+      for (let item of arr) {
+        if (rand < item.chance) return item;
+        rand -= item.chance;
+      }
+      return arr[arr.length - 1]; // fallback
+    }
+
+    // Helper: open pack animation
+    function animatePack(packElement) {
+      packElement.classList.add('opening');
+      setTimeout(() => {
+        packElement.classList.remove('opening');
+      }, 500);
+    }
+
+    // The main buyPack function
+    function buyPack(packType, packElement) {
+      const user = getCurrentUser();
+      if (!user) {
+        showPopup("Please log in to buy packs.");
+        return;
+      }
+
+      let cost, packArray;
+
+      switch (packType) {
+        case 'milk':
+          cost = 30;
+          packArray = milkPack;
+          break;
+        case 'space':
+          cost = 30;
+          packArray = spacePack;
+          break;
+        case 'og':
+          cost = 30;
+          packArray = ogPack; // OG pack was not defined; you can replace or add it if you want
+          break;
+        case 'donut':
+          cost = 30;
+          packArray = donutPack;
+          break;
+        case 'school':
+          cost = 50;
+          packArray = schoolPack;
+          break;
+          case 'token':
+          cost = 50;
+          packArray = tokenPack;
+          break;
+        case 'negative':
+          cost = negativePack.cost; // -50000
+          packArray = null; // no blook reward
+          break;
+        default:
+          showPopup("Invalid pack type!");
+          return;
+      }
+
+      let tokens = getTokens();
+
+      // For negative cost pack: allow purchase even if tokens are 0 or less
+      if (packType !== 'negative' && tokens < cost) {
+        showPopup(`You need at least ${cost} tokens to buy this pack.`);
+        return;
+      }
+
+      // Deduct or add tokens
+      tokens -= cost;
+      setTokens(tokens);
+
+      animatePack(packElement);
+
+      if (packType === 'negative') {
+        showPopup("You received 50,000 tokens!");
+        return;
+      }
+
+      // Select a blook from packArray weighted by chance
+      const rewardedBlook = weightedRandomPick(packArray);
+
+      if (!rewardedBlook) {
+        showPopup("No blook found!");
+        return;
+      }
+
+      // Save the rewarded blook to user inventory
+      addBlook(rewardedBlook);
+
+      // Increment packs opened count
+      const packsOpened = getPacksOpened() + 1;
+      setPacksOpened(packsOpened);
+
+      // Show popup message
+      showPopup(`You received: ${rewardedBlook.name}`);
+
+      // You can add further UI updates here like showing the rewarded blook image in a modal, etc.
+    }
+
+    // Update token display on page load
+    function init() {
+      let tokens = getTokens();
+      tokenDisplay.textContent = tokens.toLocaleString('en-US');
+      maybeShowNegativePack();
+    }
+
+    init();
+
+  </script>
+</body>
+</html>
